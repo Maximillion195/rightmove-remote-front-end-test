@@ -1,31 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropertyCard from '../PropertyCard';
 import './PropertyListing.scss';
 
-const DUMMY_PROPERTY = {
-    id: 73864112,
-    bedrooms: 3,
-    summary: 'Property 1 Situated moments from the River Thames in Old Chelsea...',
-    displayAddress: '1 CHEYNE WALK, CHELSEA, SW3',
-    propertyType: 'Flat',
-    price: 1950000,
-    branchName: 'M2 Property, London',
-    propertyUrl: '/property-for-sale/property-73864112.html',
-    contactUrl: '/property-for-sale/contactBranch.html?propertyId=73864112',
-    propertyTitle: '3 bedroom flat for sale',
-    mainImage:
-        'https://media.rightmove.co.uk/dir/crop/10:9-16:9/38k/37655/53588679/37655_CAM170036_IMG_01_0000_max_476x317.jpg',
-};
-
 const PropertyListing = () => {
-    return (
-        <ul className="PropertyListing">
-            {Array(5)
-                .fill(DUMMY_PROPERTY)
-                .map((property, index) => (
-                    <li key={index}>
+    const [properties, setProperties] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/properties");
+
+                if (!res.ok) {
+                    throw new Error('Error fetching propertis');
+                }
+                const propertiesData = await res.json();
+                setProperties(propertiesData);
+                setIsLoading(false);
+            } catch (err) {
+                setError(err.message)
+                setIsLoading(false);
+            }
+        }
+
+        fetchProperties();
+    }, [])
+
+        if (isLoading) {
+            return <div>Loading...</div>;
+        }
+    
+        if (error) {
+            return <div>Error: {error}</div>;
+        }
+
+        if (!properties.length) {
+            return <div>No properties listed</div>;
+        }
+
+        return (
+            <ul className="PropertyListing">
+                { properties.map((property) => (
+                    <li key={property.id}>
                         <PropertyCard {...property} />
-                    </li>
+                    </li>                       
                 ))}
         </ul>
     );
